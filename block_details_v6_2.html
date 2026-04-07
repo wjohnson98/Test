@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Block Details – v5</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#ECEEF1;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+
+/* ── Modal shell ── */
+.modal{background:#fff;border:1px solid #D6D6D6;border-radius:12px;overflow:hidden;width:980px;box-shadow:0 2px 16px rgba(0,0,0,.10)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;border-bottom:1px solid #EBEBEB}
+.modal-title{font-size:15px;font-weight:600;color:#111}
+.close-x{font-size:18px;color:#AAA;cursor:pointer;background:none;border:none;line-height:1;padding:2px 6px;border-radius:4px}
+.close-x:hover{color:#333;background:#F3F4F6}
+
+/* ── Tabs ── */
+.tabs{display:flex;border-bottom:1px solid #EBEBEB;padding:0 28px}
+.tab{padding:10px 16px;font-size:13px;cursor:pointer;color:#6B7280;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500}
+.tab.active{color:#2563EB;border-bottom-color:#2563EB;font-weight:600}
+.tab:hover:not(.active){color:#374151}
+
+/* ── Body ── */
+.body{padding:20px 28px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 160px);overflow-y:auto}
+
+/* ── Section cards ── */
+.sc{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:20px}
+.sc-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sc-title-icon{font-size:15px}
+
+/* ── Block details form ── */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.row2:last-child,.row3:last-child{margin-bottom:0}
+.field{display:flex;flex-direction:column;gap:4px}
+.lbl{font-size:12px;font-weight:500;color:#4B5563}
+.req{color:#DC2626}
+
+.inp{height:36px;border:1px solid #D1D5DB;border-radius:7px;padding:0 10px;font-size:13px;color:#111827;width:100%;background:#fff;transition:border-color .15s,box-shadow .15s}
+.inp:focus{outline:none;border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sel{height:36px;border:1px solid #D1D5DB;border-radius:7px;padding:0 30px 0 10px;font-size:13px;color:#111827;width:100%;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer;transition:border-color .15s}
+.sel:focus{outline:none;border-color:#2563EB}
+
+.ghost-btn{font-size:12px;color:#2563EB;cursor:pointer;border:1px solid #D1D5DB;padding:5px 12px;border-radius:20px;background:#fff;display:inline-flex;align-items:center;gap:5px;transition:all .15s;font-weight:500}
+.ghost-btn:hover{background:#EFF6FF;border-color:#2563EB}
+
+/* ── Status pill ── */
+.status-dot{width:8px;height:8px;border-radius:50%;background:#16A34A;display:inline-block;margin-right:2px}
+
+/* ── Accommodations ── */
+.accom-radio-row{display:flex;gap:20px;margin-bottom:14px}
+.accom-radio{display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer}
+.accom-radio input[type=radio]{accent-color:#2563EB;width:15px;height:15px}
+.accom-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px}
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#6B7280;white-space:nowrap}
+.sw{width:32px;height:18px;border-radius:9px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.sw.on{background:#16A34A}.sw.off{background:#D1D5DB}
+.sw::after{content:'';position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.sw.on::after{left:16px}.sw.off::after{left:2px}
+
+/* Accommodations table */
+.accom-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.accom-tbl th{padding:7px 10px;text-align:center;font-weight:600;color:#6B7280;border-bottom:1px solid #E5E7EB;font-size:11px;white-space:nowrap;background:#F9FAFB}
+.accom-tbl th:first-child{text-align:left;min-width:160px}
+.accom-tbl td{padding:9px 10px;text-align:center;border-bottom:1px solid #F3F4F6;font-size:12px;color:#6B7280}
+.accom-tbl td:first-child{text-align:left}
+.accom-tbl tr:last-child td{border-bottom:none;font-weight:600;color:#374151;background:#F9FAFB;font-size:11px}
+.room-name{font-size:12px;font-weight:500;color:#111827}
+.room-cap{font-size:11px;color:#9CA3AF;margin-top:1px}
+.copy-icon{color:#D1D5DB;cursor:pointer;margin-left:4px;font-size:12px}
+.copy-icon:hover{color:#6B7280}
+.cell-val{font-size:13px;font-weight:600;color:#111827}
+.cell-avail{font-size:11px;color:#9CA3AF}
+
+/* ── Inventory Release ── */
+.ir-section{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:20px}
+.ir-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* Radio option cards */
+.rc{border:1px solid #E5E7EB;border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.rc:last-child{margin-bottom:0}
+.rc.on{border:1.5px solid #2563EB;background:#EFF6FF}
+.rc-top{display:flex;align-items:center;gap:10px}
+.rdot{width:16px;height:16px;border-radius:50%;border:1.5px solid #D1D5DB;flex-shrink:0;position:relative;transition:all .15s;background:#fff}
+.rc.on .rdot{border-color:#2563EB;background:#2563EB}
+.rc.on .rdot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:50%;background:#fff}
+.rc-lbl{font-size:14px;font-weight:600;color:#111827}
+.rc-sub{font-size:13px;color:#9CA3AF;margin-left:26px;margin-top:2px}
+
+/* Reveal */
+.reveal{margin-top:14px;padding-top:14px;border-top:1px solid #BFDBFE}
+
+/* Pill tabs */
+.pill-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.pill-tabs{display:flex;background:#F3F4F6;border-radius:20px;padding:2px;gap:1px}
+.pill-tab{padding:5px 16px;border-radius:20px;font-size:13px;cursor:pointer;color:#6B7280;transition:all .15s;white-space:nowrap;user-select:none;font-weight:500}
+.pill-tab.on{background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* Qty mode toggle */
+.mode-toggle{display:flex;align-items:center;gap:8px}
+.mode-lbl{font-size:13px;font-weight:500;color:#374151}
+.seg{display:flex;border:1px solid #D1D5DB;border-radius:6px;overflow:hidden;height:32px}
+.seg-btn{width:38px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;color:#6B7280;background:#fff;transition:all .15s;border-right:1px solid #D1D5DB}
+.seg-btn:last-child{border-right:none}
+.seg-btn.on{background:#2563EB;color:#fff;border-color:#2563EB}
+.seg-btn:not(.on):hover{background:#F3F4F6}
+
+/* Boxed inputs */
+.two-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.box-f{border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;background:#fff;cursor:text;transition:border-color .15s,box-shadow .15s}
+.box-f:focus-within{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.box-lbl{font-size:12px;font-weight:600;color:#111827;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.box-lbl-ico{color:#9CA3AF;font-size:11px}
+.box-inp{border:none;outline:none;font-size:14px;color:#374151;background:transparent;width:100%;padding:0}
+.box-inp-row{display:flex;align-items:center;gap:4px}
+.box-sfx{font-size:13px;color:#9CA3AF}
+.box-sel{border:none;outline:none;font-size:14px;color:#374151;background:transparent;width:100%;padding:0;cursor:pointer;appearance:none}
+
+/* Tier cards */
+.tier-stack{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.tc{border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;background:#fff}
+.tc-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:#F9FAFB;border-bottom:1px solid #E5E7EB}
+.tc-title{font-size:13px;font-weight:600;color:#374151}
+.rm-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid #FECACA;border-radius:20px;font-size:12px;color:#DC2626;background:#fff;cursor:pointer;font-weight:500;transition:all .15s}
+.rm-btn:hover{background:#FEF2F2}
+.tc-body{padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:10px}
+
+/* Qty field */
+.qty-f{border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.qty-f:focus-within{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.qty-inp-row{display:flex;align-items:center;gap:4px;margin-top:4px}
+.qty-inp{border:none;outline:none;font-size:14px;color:#374151;background:transparent;width:60px;padding:0}
+.qty-inp.err{color:#DC2626}
+.qty-sfx{font-size:13px;color:#9CA3AF}
+
+/* Accom dropdown in tier */
+.accom-f-wrap{position:relative}
+.accom-arr{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#9CA3AF;pointer-events:none;margin-top:3px}
+
+/* Bottom row */
+.bottom-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.add-night-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid #D1D5DB;border-radius:20px;font-size:13px;color:#2563EB;background:#fff;cursor:pointer;font-weight:500;transition:all .15s;white-space:nowrap}
+.add-night-btn:hover{background:#EFF6FF;border-color:#2563EB}
+
+/* Progress bar */
+.prog-wrap{flex:1;min-width:180px}
+.prog-lbl{font-size:12px;font-weight:600;color:#374151;margin-bottom:5px}
+.prog-lbl.over{color:#DC2626}
+.prog-track{height:6px;background:#F3F4F6;border-radius:3px;border:1px solid #E5E7EB;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:#2563EB;transition:width .15s,background .15s}
+.prog-fill.full{background:#16A34A}
+.prog-fill.over{background:#DC2626}
+
+
+
+/* ── Footer ── */
+.footer{padding:14px 28px;border-top:1px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center;background:#fff}
+.btn-sec{height:36px;padding:0 18px;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #D1D5DB;background:#fff;color:#374151;font-weight:500;transition:background .15s}
+.btn-sec:hover{background:#F9FAFB}
+.btn-pri{height:36px;padding:0 22px;border-radius:7px;font-size:13px;cursor:pointer;border:none;background:#2563EB;color:#fff;font-weight:600;transition:background .15s}
+.btn-pri:hover{background:#1D4ED8}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;display:none;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{display:flex}
+.toast-check{width:18px;height:18px;border-radius:50%;background:#16A34A;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="modal">
+
+  <!-- Header -->
+  <div class="modal-header">
+    <span class="modal-title">Block details</span>
+    <button class="close-x" onclick="this.closest('.modal').style.opacity='.5'">✕</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active">Block details</div>
+    <div class="tab">Rooming list</div>
+  </div>
+
+  <div class="body">
+
+    <!-- ══ SECTION 1: Block details ══ -->
+    <div class="sc">
+      <div class="row2">
+        <div class="field">
+          <div class="lbl">Block name <span class="req">*</span></div>
+          <input class="inp" value="Annual Hoteliers Convention 2026 - Speakers">
+        </div>
+        <div class="field">
+          <div class="lbl">Block status</div>
+          <select class="sel">
+            <option>● Definite</option>
+            <option>● Tentative</option>
+            <option>● Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="row3">
+        <div class="field">
+          <div class="lbl">Stay dates <span class="req">*</span></div>
+          <input class="inp" value="10/09/2026 – 12/09/2026">
+        </div>
+        <div class="field">
+          <div class="lbl">Days of week</div>
+          <select class="sel"><option>All</option><option>Mon–Fri</option><option>Weekends</option></select>
+        </div>
+        <div class="field">
+          <div class="lbl">Allotment type</div>
+          <select class="sel"><option>Block</option><option>Allotment</option></select>
+        </div>
+      </div>
+      <div class="row2" style="margin-bottom:12px">
+        <div class="field">
+          <div class="lbl">Rate</div>
+          <select class="sel"><option>Base rate</option></select>
+        </div>
+        <div class="field">
+          <div class="lbl">Routing</div>
+          <select class="sel"><option>Same as Event</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="ghost-btn">+ Shoulder dates</button>
+        <button class="ghost-btn">+ Restrictions</button>
+      </div>
+    </div>
+
+    <!-- ══ SECTION 2: Accommodations ══ -->
+    <div class="sc">
+      <div class="sc-title"><span class="sc-title-icon">🛏</span> Accommodations</div>
+      <div class="accom-radio-row">
+        <label class="accom-radio"><input type="radio" name="accom" checked> Accommodation types</label>
+        <label class="accom-radio"><input type="radio" name="accom"> Units</label>
+      </div>
+      <div class="accom-top">
+        <div class="field" style="width:260px">
+          <div class="lbl">Accommodation types <span class="req">*</span></div>
+          <select class="sel"><option>3 selected</option><option>All</option></select>
+        </div>
+        <div class="toggle-row">
+          <div class="sw off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
+          <span>Show extra guest pricing</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="accom-tbl">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Mon<br><span style="font-weight:400;font-size:10px">10 Sep</span></th>
+              <th>Tue<br><span style="font-weight:400;font-size:10px">11 Sep</span></th>
+              <th>Wed<br><span style="font-weight:400;font-size:10px">12 Sep</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="room-name">Double Room <span class="copy-icon">⧉</span></div><div class="room-cap">🛏 25</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+            </tr>
+            <tr>
+              <td><div class="room-name">Deluxe Room <span class="copy-icon">⧉</span></div><div class="room-cap">🛏 25</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+            </tr>
+            <tr>
+              <td><div class="room-name">Premier Suite <span class="copy-icon">⧉</span></div><div class="room-cap">🛏 25</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+              <td><div class="cell-val">5</div><div class="cell-avail">/ 20</div></td>
+            </tr>
+            <tr>
+              <td style="font-size:11px;font-weight:600;color:#374151">Total blocked / available</td>
+              <td><span style="font-weight:700;color:#111">15</span> <span style="color:#9CA3AF">/ 50</span></td>
+              <td><span style="font-weight:700;color:#111">15</span> <span style="color:#9CA3AF">/ 50</span></td>
+              <td><span style="font-weight:700;color:#111">15</span> <span style="color:#9CA3AF">/ 50</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+    <!-- ══ SECTION 3: Inventory Release ══ -->
+    <div class="ir-section">
+      <div class="ir-title">
+        <span>↻</span> Inventory release
+      </div>
+
+      <!-- Do not release -->
+      <div class="rc on" id="sc-none" onclick="setSchedule('none')">
+        <div class="rc-top"><div class="rdot"></div><span class="rc-lbl">Do not release</span></div>
+        <div class="rc-sub">Inventory stays blocked, release manually when needed</div>
+      </div>
+
+      <!-- Release all at once -->
+      <div class="rc" id="sc-all" onclick="setSchedule('all')">
+        <div class="rc-top"><div class="rdot"></div><span class="rc-lbl">Release all at once</span></div>
+        <div class="rc-sub">All unsold inventory across every night released together</div>
+        <div class="reveal hidden" id="reveal-all">
+          <div class="pill-tabs" style="margin-bottom:14px;width:fit-content">
+            <div class="pill-tab on" id="all-tt-days" onclick="setTrigger('all','days');event.stopPropagation()">Days before arrival</div>
+            <div class="pill-tab" id="all-tt-date" onclick="setTrigger('all','date');event.stopPropagation()">Specific date</div>
+          </div>
+          <div class="two-fields" id="all-days-f">
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl">Days out</div>
+              <div class="box-inp-row"><input class="box-inp" type="number" value="0" min="0" style="width:60px"><span class="box-sfx">days</span></div>
+            </div>
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">🕐</span> Release time</div>
+              <input class="box-inp" type="time" value="12:00">
+            </div>
+          </div>
+          <div class="two-fields hidden" id="all-date-f">
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">📅</span> Release date</div>
+              <input class="box-inp" type="date">
+            </div>
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">🕐</span> Release time</div>
+              <input class="box-inp" type="time" value="12:00">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Release one night at a time -->
+      <div class="rc" id="sc-daily" onclick="setSchedule('daily')">
+        <div class="rc-top"><div class="rdot"></div><span class="rc-lbl">Release one night at a time</span></div>
+        <div class="rc-sub">Each stay night releases on its own schedule</div>
+        <div class="reveal hidden" id="reveal-daily">
+
+          <div class="pill-row">
+            <div class="pill-tabs">
+              <div class="pill-tab on" id="daily-tt-days" onclick="setTrigger('daily','days');event.stopPropagation()">Days before arrival</div>
+              <div class="pill-tab" id="daily-tt-date" onclick="setTrigger('daily','date');event.stopPropagation()">Specific date</div>
+              <div class="pill-tab" id="daily-tt-custom" onclick="setTrigger('daily','custom');event.stopPropagation()">Custom per night</div>
+            </div>
+            <div class="mode-toggle hidden" id="mode-wrap">
+              <span class="mode-lbl">Inventory to release</span>
+              <div class="seg">
+                <div class="seg-btn on" id="mode-pct" onclick="setQtyMode('pct');event.stopPropagation()">%</div>
+                <div class="seg-btn" id="mode-units" onclick="setQtyMode('units');event.stopPropagation()">#</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Days before -->
+          <div class="two-fields" id="daily-days-f">
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl">Days out</div>
+              <div class="box-inp-row"><input class="box-inp" type="number" value="0" min="0" style="width:60px"><span class="box-sfx">days</span></div>
+            </div>
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">🕐</span> Release time</div>
+              <input class="box-inp" type="time" value="12:00">
+            </div>
+          </div>
+
+          <!-- Specific date -->
+          <div class="two-fields hidden" id="daily-date-f">
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">📅</span> Release date</div>
+              <input class="box-inp" type="date">
+            </div>
+            <div class="box-f" onclick="event.stopPropagation()">
+              <div class="box-lbl"><span class="box-lbl-ico">🕐</span> Release time</div>
+              <input class="box-inp" type="time" value="12:00">
+            </div>
+          </div>
+
+          <!-- Custom per night -->
+          <div id="daily-custom-f" class="hidden">
+            <div class="tier-stack" id="tier-list"></div>
+            <div class="bottom-row">
+              <button class="add-night-btn" onclick="addTier();event.stopPropagation()">+ Night rule</button>
+              <div class="prog-wrap">
+                <div class="prog-lbl" id="prog-lbl">Allocated 0 of 100%</div>
+                <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+      </div>
+
+    </div><!-- /ir-section -->
+
+  </div><!-- /body -->
+
+  <!-- Footer -->
+  <div class="footer">
+    <button class="btn-sec">Cancel</button>
+    <button class="btn-pri" onclick="doSave()">Update block</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-check">✓</div>
+  <span id="toast-text">Block saved</span>
+</div>
+
+<script>
+var schedule='none', triggers={all:'days',daily:'days'}, qtyMode='pct', TOTAL=10;
+var nights=[
+  {label:'Day 1 - Mon, 10 Sep', date:'2026-09-10'},
+  {label:'Day 2 - Tue, 11 Sep', date:'2026-09-11'},
+  {label:'Day 3 - Wed, 12 Sep', date:'2026-09-12'}
+];
+var tiers=[];
+
+/* ── Schedule ── */
+function setSchedule(s){
+  schedule=s;
+  ['none','all','daily'].forEach(function(k){
+    document.getElementById('sc-'+k).classList.toggle('on',k===s);
+  });
+  document.getElementById('reveal-all').classList.toggle('hidden',s!=='all');
+  document.getElementById('reveal-daily').classList.toggle('hidden',s!=='daily');
+  if(s==='daily'&&tiers.length===0){initTiers();renderTiers();}
+}
+
+/* ── Trigger ── */
+function setTrigger(scope,t){
+  triggers[scope]=t;
+  ['days','date','custom'].forEach(function(k){
+    var el=document.getElementById(scope+'-tt-'+k);
+    if(el) el.classList.toggle('on',k===t);
+  });
+  if(scope==='all'){
+    document.getElementById('all-days-f').classList.toggle('hidden',t!=='days');
+    document.getElementById('all-date-f').classList.toggle('hidden',t!=='date');
+  } else {
+    document.getElementById('daily-days-f').classList.toggle('hidden',t!=='days');
+    document.getElementById('daily-date-f').classList.toggle('hidden',t!=='date');
+    document.getElementById('daily-custom-f').classList.toggle('hidden',t!=='custom');
+    var mw=document.getElementById('mode-wrap');
+    mw.classList.toggle('hidden',t!=='custom');
+    if(t==='custom'&&tiers.length===0){initTiers();renderTiers();}
+  }
+  /* show/hide notif correctly */
+  var nd=document.getElementById('notif-daily');
+  if(nd) nd.style.borderTop=t==='custom'?'':'1px solid #F3F4F6';
+}
+
+/* ── Qty mode ── */
+function setQtyMode(m){
+  qtyMode=m;
+  document.getElementById('mode-pct').classList.toggle('on',m==='pct');
+  document.getElementById('mode-units').classList.toggle('on',m==='units');
+  renderTiers();
+}
+
+/* ── Tiers ── */
+function initTiers(){
+  var n=nights.length;
+  var base=Math.floor(100/n);
+  var rem=100-(base*(n-1));
+  tiers=nights.map(function(night,i){
+    return {night:night.label,date:night.date,time:'12:00',qty:i<n-1?base:rem,room:'all'};
+  });
+}
+
+function getAllocated(){
+  return tiers.reduce(function(s,t){return s+(parseFloat(t.qty)||0)},0);
+}
+function getMax(){return qtyMode==='pct'?100:TOTAL}
+
+function updateProgress(){
+  var alloc=getAllocated();
+  var max=getMax();
+  var isOver=alloc>max;
+  var isFull=!isOver&&alloc===max;
+  var pct=Math.min(100,Math.round(alloc/max*100));
+  var sfx=qtyMode==='pct'?'%':' units';
+  var fill=document.getElementById('prog-fill');
+  var lbl=document.getElementById('prog-lbl');
+  if(fill){fill.style.width=pct+'%';fill.className='prog-fill'+(isOver?' over':isFull?' full':'');}
+  if(lbl){lbl.textContent='Allocated '+alloc+' of '+max+sfx;lbl.className='prog-lbl'+(isOver?' over':'');}
+  document.querySelectorAll('.qty-inp').forEach(function(inp){inp.className='qty-inp'+(isOver?' err':'');});
+}
+
+function renderTiers(){
+  var list=document.getElementById('tier-list');
+  if(!list) return;
+  list.innerHTML='';
+  var sfx=qtyMode==='pct'?'%':' units';
+  var canRemove=tiers.length>1;
+  tiers.forEach(function(t,i){
+    var card=document.createElement('div');
+    card.className='tc';
+    card.innerHTML=
+      '<div class="tc-head">'+
+        '<span class="tc-title">'+t.night+'</span>'+
+        (canRemove?'<button class="rm-btn" onclick="delTier('+i+');event.stopPropagation()">🗑 Remove</button>':'<span style="font-size:11px;color:#9CA3AF">At least 1 required</span>')+
+      '</div>'+
+      '<div class="tc-body">'+
+        '<div class="box-f" onclick="event.stopPropagation()">'+
+          '<div class="box-lbl"><span class="box-lbl-ico">📅</span> Release date</div>'+
+          '<input class="box-inp" type="date" value="'+t.date+'">'+
+        '</div>'+
+        '<div class="box-f" onclick="event.stopPropagation()">'+
+          '<div class="box-lbl"><span class="box-lbl-ico">🕐</span> Release time</div>'+
+          '<input class="box-inp" type="time" value="'+(t.time||'12:00')+'">'+
+        '</div>'+
+        '<div class="qty-f" onclick="event.stopPropagation()">'+
+          '<div class="box-lbl">Inventory to release</div>'+
+          '<div class="qty-inp-row">'+
+            '<input class="qty-inp" type="number" min="0" max="'+(qtyMode==='pct'?100:TOTAL)+'" value="'+(t.qty||'')+'">'+
+            '<span class="qty-sfx">'+sfx+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="box-f accom-f-wrap" onclick="event.stopPropagation()">'+
+          '<div class="box-lbl">Accommodation types</div>'+
+          '<select class="box-sel"><option>All selected</option><option>Double Room</option><option>Deluxe Room</option><option>Premier Suite</option></select>'+
+          '<span class="accom-arr">▾</span>'+
+        '</div>'+
+      '</div>';
+    var qInp=card.querySelector('.qty-inp');
+    if(qInp) qInp.addEventListener('input',function(){tiers[i].qty=this.value;updateProgress();});
+    list.appendChild(card);
+  });
+  updateProgress();
+}
+
+function addTier(){
+  var idx=tiers.length;
+  var n=nights[idx];
+  tiers.push({night:n?n.label:('Day '+(idx+1)),date:n?n.date:'',time:'12:00',qty:0,room:'all'});
+  renderTiers();
+}
+
+function delTier(idx){
+  if(tiers.length<=1) return;
+  tiers.splice(idx,1);
+  renderTiers();
+}
+
+/* ── Save ── */
+function doSave(){
+  var msg='Annual Hoteliers Convention 2026 saved';
+  if(schedule==='none') msg+=' — no release scheduled';
+  else if(schedule==='all') msg+=' — release all at once';
+  else msg+=' — custom per-night release';
+  document.getElementById('toast-text').textContent=msg;
+  var t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},3500);
+}
+
+/* init */
+setSchedule('none');
+setTrigger('all','days');
+setTrigger('daily','days');
+document.getElementById('mode-wrap').classList.add('hidden');
+</script>
+</body>
+</html>
